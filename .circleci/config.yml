@@ -1,0 +1,46 @@
+version: 2.1
+
+# add your orb below, to be used in integration tests (note: a @dev:alpha
+# release must exist.);
+orbs:
+  serverless: circleci/serverless-framework@1.0.1
+  aws-cli: circleci/aws-cli@0.1.22
+  node: circleci/node@2.0
+
+jobs:
+  test:
+    executor: serverless/default
+    steps:
+      - checkout
+      - node/install-packages
+      - run:
+          name: Run Tests
+          command: npm run test
+  deploy:
+    executor: serverless/default
+    steps:
+      - checkout
+      - aws-cli/setup
+      - node/install-packages
+      - serverless/setup:
+          provider: AWS
+          app-name: serverless-framework-orb
+          org-name: circleci
+      - run:
+          name: Local invoke add function
+          command: serverless invoke local --function add --path 'sampleData/data.json'
+      - run:
+          command: serverless deploy -v
+          name: deploy
+
+workflows:
+ test_and_deploy:
+  jobs:
+    - test
+    - deploy:
+        requires:
+          - test
+        filters:
+            branches:
+              only: master
+        context: serverless-framework-orb-testing
