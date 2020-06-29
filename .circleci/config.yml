@@ -9,7 +9,7 @@ orbs:
 
 jobs:
   test:
-    executor: serverless/default
+    executor: node/default
     steps:
       - checkout
       - node/install-packages
